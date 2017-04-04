@@ -12,3 +12,4 @@ class CsyspiderforgithubItem(Item):
     # define the fields for your item here like:
     username = Field()
     repos_url = Field()
+    id = Field()

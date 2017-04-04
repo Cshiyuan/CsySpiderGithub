@@ -14,6 +14,12 @@ BOT_NAME = 'CsySpiderGithub'
 SPIDER_MODULES = ['CsySpiderGithub.spiders']
 NEWSPIDER_MODULE = 'CsySpiderGithub.spiders'
 
+
+MONGODB_SERVER = "119.29.186.160"
+MONGODB_PORT = 27017
+MONGODB_DB = "github"
+MONGODB_COLLECTION = "user"
+
 LOG_LEVEL = 'INFO'
 
 # logging.CRITICAL - for critical errors (highest severity)
@@ -23,15 +29,14 @@ LOG_LEVEL = 'INFO'
 # logging.DEBUG - for debugging messages (lowest severity)
 
 ITEM_PIPELINES = {
-    'CsySpiderGithub.MongoDBPipeline.MongoDBPipeline': 300,
+    # 'CsySpiderGithub.MongoDBPipeline.MongoDBPipeline': 300,
+    'CsySpiderGithub.pipelines.GithubPipeline' : 300
 }
-MONGODB_SERVER = "119.29.186.160"
-MONGODB_PORT = 27017
-MONGODB_DB = "github"
-MONGODB_COLLECTION = "user"
+
+
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = 'csyspiderforgithub (+http://www.yourdomain.com)'
+#USER_AGENT = 'CsySpiderGithub (+http://www.yourdomain.com)'
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = False

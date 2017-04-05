@@ -27,11 +27,12 @@ class Github_User_Item(Item):
 class Github_Repos_Item(Item):
     # define the fields for your item here like:
     id = Field()  # 唯一id
+    owner_id = Field()  # 拥有者id
     name = Field()  # 名称
     full_name = Field()  # 全名
     language = Field()  # language 的语言类型
     size = Field()
-    create_at = Field()
+    created_at = Field()
     updated_at = Field()
     pushed_at = Field()
     forks = Field()

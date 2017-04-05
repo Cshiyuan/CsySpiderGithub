@@ -13,6 +13,7 @@ from CsySpiderGithub.items import Github_Repos_Item
 from CsySpiderGithub.items import Github_User_Item
 from  CsySpiderGithub.util.Url_Util import set_get_request_param
 from  CsySpiderGithub.util.Url_Util import set_client_key
+from CsySpiderGithub.util.check_error_util import check_error
 
 
 class StackSpider(scrapy.Spider):
@@ -38,7 +39,9 @@ class StackSpider(scrapy.Spider):
         pass
 
     def parse(self, response):
-
+        # 判断错误
+        if check_error(response):
+            return
         # 遍历users获取每个user的repos
         json_response = json.loads(response.body)
 
@@ -48,7 +51,7 @@ class StackSpider(scrapy.Spider):
             url_user = user['url']
             url_user = set_client_key(url_user)
             if url_user:
-                logging.info('try to crawl ' + user['login'] + ' info' + ' repos info with request id' + str(
+                logging.info('try to crawl ' + user['login'] + ' info' + ' repos info with request id ' + str(
                     self._request_count))
                 self._request_count += 1
                 yield scrapy.Request(url_user, self.parse_user_info)
@@ -57,7 +60,8 @@ class StackSpider(scrapy.Spider):
             url_repos = user['repos_url']
             url_repos = set_client_key(url_repos)
             if url_repos:
-                logging.info('try to crawl ' + user['login'] + ' repos info with request id ' + str(self._request_count))
+                logging.info(
+                    'try to crawl ' + user['login'] + ' repos info with request id ' + str(self._request_count))
                 self._request_count += 1
                 yield scrapy.Request(url_repos, self.parse_user_repos)
 
@@ -65,16 +69,22 @@ class StackSpider(scrapy.Spider):
             if i == len(json_response) - 1:
                 self._user_since = user['id']  # 记录下一步的since
                 next_users_url = get_userlist_url(self._user_since)
-                logging.info('start next users_url \n' + next_users_url)
+                logging.warning('start next users_url \n' + next_users_url)
                 yield scrapy.Request(next_users_url, self.parse)
                 pass
 
+
+
     def parse_user_repos(self, response):
+        # 判断错误
+        if check_error(response):
+            return
 
         repos_json_response = json.loads(response.body)
+        owner = repos_json_response[0]['owner']['login']
+
         for repos in repos_json_response:
             repos_item = Github_Repos_Item()
-
             repos_item['id'] = repos['id']
             repos_item['owner_id'] = repos['owner']['id']
             repos_item['name'] = repos['name']
@@ -89,9 +99,15 @@ class StackSpider(scrapy.Spider):
             repos_item['stargazers_count'] = repos['stargazers_count']
             yield repos_item
 
-            logging.info('success to crawl ' + repos['owner']['login'] + '\'s repos info')
+        if owner is None:
+            logging.warning(owner + '\'s repos is empty!')
+        else:
+            logging.info('success to crawl ' + owner + '\'s repos info!')
 
     def parse_user_info(self, response):
+        # 判断错误
+        if check_error(response):
+            return
 
         user = json.loads(response.body)
         user_item = Github_User_Item()
@@ -108,12 +124,12 @@ class StackSpider(scrapy.Spider):
         user_item['location'] = user['location']
         yield user_item
 
-        logging.info('success to crawl ' + user['login'] + '\'s repos info ')
+        logging.info('success to crawl ' + user['login'] + '\'s info!')
 
-        pass
+    pass
 
     def close(spider, reason):
-        logging.info('close with reason')
-        logging.info(reason)
-        logging.info('since is ' + str(spider._user_since))
+        logging.warning('close with reason :')
+        logging.warning(reason)
+        logging.warning('since is ' + str(spider._user_since))
         pass

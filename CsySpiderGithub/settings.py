@@ -15,12 +15,7 @@ SPIDER_MODULES = ['CsySpiderGithub.spiders']
 NEWSPIDER_MODULE = 'CsySpiderGithub.spiders'
 
 
-MONGODB_SERVER = "119.29.186.160"
-MONGODB_PORT = 27017
-MONGODB_DB = "github"
-MONGODB_COLLECTION = "user"
-
-LOG_LEVEL = 'INFO'
+LOG_LEVEL = 'WARNING'
 
 # logging.CRITICAL - for critical errors (highest severity)
 # logging.ERROR - for regular errors
@@ -29,7 +24,6 @@ LOG_LEVEL = 'INFO'
 # logging.DEBUG - for debugging messages (lowest severity)
 
 ITEM_PIPELINES = {
-    # 'CsySpiderGithub.MongoDBPipeline.MongoDBPipeline': 300,
     'CsySpiderGithub.pipelines.GithubPipeline' : 300
 }
 

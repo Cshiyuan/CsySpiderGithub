@@ -5,6 +5,7 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
 import pymongo
+from CsySpiderGithub.items import Github_User_Item
 
 SERVER_ID = "119.29.186.160"
 SERVER_PORT = 27017
@@ -23,7 +24,8 @@ class GithubPipeline(object):
     # 将相关的item添加到数据库表中
     def process_item(self, item, spider):
 
-        self.user_table.insert(dict(item))
+        if isinstance(item, Github_User_Item):
+            self.user_table.insert(dict(item))
 
         return item
         pass

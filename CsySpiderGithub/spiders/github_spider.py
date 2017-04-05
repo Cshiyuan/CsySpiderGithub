@@ -45,7 +45,7 @@ class StackSpider(scrapy.Spider):
                 yield scrapy.Request(url_user, self.parse_user_info)
 
             # 遍历用户repos信息
-            logging.info('start to spider' + user['username'] + 'is repos')
+            # logging.info('start to spider' + user['login'] + 'is repos')
             url_repos = user['repos_url']
             url_repos = set_client_key(url_repos)
             if url_repos:
@@ -54,7 +54,7 @@ class StackSpider(scrapy.Spider):
             # 如果已经遍历到了尽头，则开始下一轮遍历。
             if i == len(jsonresponse) - 1:
                 next_users_url = get_userlist_url(user['id'])
-                logging.info('start next users_url' + next_users_url)
+                logging.info('start next users_url \n' + next_users_url)
                 yield scrapy.Request(next_users_url, self.parse)
                 pass
 
@@ -63,9 +63,18 @@ class StackSpider(scrapy.Spider):
         repos_json_response = json.loads(response.body)
         for repos in repos_json_response:
             repos_item = Github_Repos_Item()
+            repos_item['id'] = repos['id']
+            repos_item['owner_id'] = repos['owner']['id']
+            repos_item['name'] = repos['name']
             repos_item['full_name'] = repos['full_name']
             repos_item['language'] = repos['language']
-
+            repos_item['size'] = repos['size']
+            repos_item['created_at'] = repos['created_at']
+            repos_item['updated_at'] = repos['updated_at']
+            repos_item['pushed_at'] = repos['pushed_at']
+            repos_item['forks'] = repos['forks']
+            repos_item['watchers'] = repos['watchers']
+            repos_item['stargazers_count'] = repos['stargazers_count']
             yield repos_item
 
     def parse_user_info(self, response):

@@ -15,7 +15,7 @@ SPIDER_MODULES = ['CsySpiderGithub.spiders']
 NEWSPIDER_MODULE = 'CsySpiderGithub.spiders'
 
 
-LOG_LEVEL = 'WARNING'
+LOG_LEVEL = 'INFO'
 
 # logging.CRITICAL - for critical errors (highest severity)
 # logging.ERROR - for regular errors

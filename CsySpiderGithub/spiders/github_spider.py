@@ -22,38 +22,49 @@ class StackSpider(scrapy.Spider):
         "api.github.com"
     ]
 
-    download_delay = 1
+    handle_httpstatus_list = [403]
+
+    download_delay = 0.25
 
     headers = {
         'User-Agent': "Github_API_REQUESTS"
     }
 
-    start_urls = [
-        "https://api.github.com/users?since=0&client_id=cbb90c8c9e00b757a07a&client_secret=3061191bfcd5879717b3b764c574d9ec806b2aa1",
-    ]
+    def start_requests(self):
+        self._request_count = 0
+        self._user_since = 0
+        start_url = get_userlist_url(0)
+        yield scrapy.Request(url=start_url, callback=self.parse)
+        pass
 
     def parse(self, response):
-        # 遍历users获取每个user的repos
-        jsonresponse = json.loads(response.body)
 
-        for i, user in enumerate(jsonresponse):
+        # 遍历users获取每个user的repos
+        json_response = json.loads(response.body)
+
+        for i, user in enumerate(json_response):
 
             # 遍历用户信息
             url_user = user['url']
             url_user = set_client_key(url_user)
             if url_user:
+                logging.info('try to crawl ' + user['login'] + ' info' + ' repos info with request id' + str(
+                    self._request_count))
+                self._request_count += 1
                 yield scrapy.Request(url_user, self.parse_user_info)
 
             # 遍历用户repos信息
-            # logging.info('start to spider' + user['login'] + 'is repos')
             url_repos = user['repos_url']
             url_repos = set_client_key(url_repos)
             if url_repos:
+                logging.info('try to crawl ' + user['login'] + ' repos info with request id ' + str(self._request_count))
+                self._request_count += 1
                 yield scrapy.Request(url_repos, self.parse_user_repos)
 
             # 如果已经遍历到了尽头，则开始下一轮遍历。
-            if i == len(jsonresponse) - 1:
-                next_users_url = get_userlist_url(user['id'])
+            if i == len(json_response) - 1:
+                self._user_since = user['id']  # 记录下一步的since
+                next_users_url = get_userlist_url(self._user_since)
                 logging.info('start next users_url \n' + next_users_url)
                 yield scrapy.Request(next_users_url, self.parse)
                 pass
@@ -63,6 +74,7 @@ class StackSpider(scrapy.Spider):
         repos_json_response = json.loads(response.body)
         for repos in repos_json_response:
             repos_item = Github_Repos_Item()
+
             repos_item['id'] = repos['id']
             repos_item['owner_id'] = repos['owner']['id']
             repos_item['name'] = repos['name']
@@ -77,22 +89,31 @@ class StackSpider(scrapy.Spider):
             repos_item['stargazers_count'] = repos['stargazers_count']
             yield repos_item
 
+            logging.info('success to crawl ' + repos['owner']['login'] + '\'s repos info')
+
     def parse_user_info(self, response):
 
-        json_response = json.loads(response.body)
+        user = json.loads(response.body)
         user_item = Github_User_Item()
-
-        user_item['id'] = json_response['id']
-        user_item['username'] = json_response['login']
-        user_item['repos_url'] = json_response['repos_url']
-        user_item['homepage_url'] = json_response['html_url']
-        user_item['created_at'] = json_response['created_at']
-        user_item['updated_at'] = json_response['updated_at']
-        user_item['following'] = json_response['following']
-        user_item['followers'] = json_response['followers']
-        user_item['public_gists'] = json_response['public_gists']
-        user_item['public_repos'] = json_response['public_repos']
-        user_item['location'] = json_response['location']
+        user_item['id'] = user['id']
+        user_item['username'] = user['login']
+        user_item['repos_url'] = user['repos_url']
+        user_item['homepage_url'] = user['html_url']
+        user_item['created_at'] = user['created_at']
+        user_item['updated_at'] = user['updated_at']
+        user_item['following'] = user['following']
+        user_item['followers'] = user['followers']
+        user_item['public_gists'] = user['public_gists']
+        user_item['public_repos'] = user['public_repos']
+        user_item['location'] = user['location']
         yield user_item
 
+        logging.info('success to crawl ' + user['login'] + '\'s repos info ')
+
+        pass
+
+    def close(spider, reason):
+        logging.info('close with reason')
+        logging.info(reason)
+        logging.info('since is ' + str(spider._user_since))
         pass

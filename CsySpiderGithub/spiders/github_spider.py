@@ -13,7 +13,7 @@ from CsySpiderGithub.items import Github_Repos_Item
 from CsySpiderGithub.items import Github_User_Item
 from  CsySpiderGithub.util.Url_Util import set_get_request_param
 from  CsySpiderGithub.util.Url_Util import set_client_key
-from CsySpiderGithub.util.check_error_util import check_error
+from CsySpiderGithub.util.check_error_util import check_response
 
 
 class StackSpider(scrapy.Spider):
@@ -40,10 +40,14 @@ class StackSpider(scrapy.Spider):
 
     def parse(self, response):
         # 判断错误
-        if check_error(response):
+        if check_response(response):
             return
         # 遍历users获取每个user的repos
         json_response = json.loads(response.body)
+
+        yield scrapy.Request(
+            'https://api.github.com/users/pergesu/repos?client_secret=3061191bfcd5879717b3b764c574d9ec806b2aa1&client_id=cbb90c8c9e00b757a07a',
+            self.parse_user_repos)
 
         for i, user in enumerate(json_response):
 
@@ -73,40 +77,40 @@ class StackSpider(scrapy.Spider):
                 yield scrapy.Request(next_users_url, self.parse)
                 pass
 
-
-
     def parse_user_repos(self, response):
         # 判断错误
-        if check_error(response):
+        if check_response(response):
             return
 
         repos_json_response = json.loads(response.body)
-        owner = repos_json_response[0]['owner']['login']
 
-        for repos in repos_json_response:
-            repos_item = Github_Repos_Item()
-            repos_item['id'] = repos['id']
-            repos_item['owner_id'] = repos['owner']['id']
-            repos_item['name'] = repos['name']
-            repos_item['full_name'] = repos['full_name']
-            repos_item['language'] = repos['language']
-            repos_item['size'] = repos['size']
-            repos_item['created_at'] = repos['created_at']
-            repos_item['updated_at'] = repos['updated_at']
-            repos_item['pushed_at'] = repos['pushed_at']
-            repos_item['forks'] = repos['forks']
-            repos_item['watchers'] = repos['watchers']
-            repos_item['stargazers_count'] = repos['stargazers_count']
-            yield repos_item
-
-        if owner is None:
-            logging.warning(owner + '\'s repos is empty!')
+        #如果库为空
+        if len(repos_json_response) == 0:
+            own_name = response.url.split('?')[0].split('/')[-2]
+            logging.warning(own_name + '\'s repos is empty!')
+            pass
         else:
+            owner = repos_json_response[0]['owner']['login']
+            for repos in repos_json_response:
+                repos_item = Github_Repos_Item()
+                repos_item['id'] = repos['id']
+                repos_item['owner_id'] = repos['owner']['id']
+                repos_item['name'] = repos['name']
+                repos_item['full_name'] = repos['full_name']
+                repos_item['language'] = repos['language']
+                repos_item['size'] = repos['size']
+                repos_item['created_at'] = repos['created_at']
+                repos_item['updated_at'] = repos['updated_at']
+                repos_item['pushed_at'] = repos['pushed_at']
+                repos_item['forks'] = repos['forks']
+                repos_item['watchers'] = repos['watchers']
+                repos_item['stargazers_count'] = repos['stargazers_count']
+                yield repos_item
             logging.info('success to crawl ' + owner + '\'s repos info!')
 
     def parse_user_info(self, response):
         # 判断错误
-        if check_error(response):
+        if check_response(response):
             return
 
         user = json.loads(response.body)

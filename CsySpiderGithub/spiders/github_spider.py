@@ -45,10 +45,6 @@ class StackSpider(scrapy.Spider):
         # 遍历users获取每个user的repos
         json_response = json.loads(response.body)
 
-        yield scrapy.Request(
-            'https://api.github.com/users/pergesu/repos?client_secret=3061191bfcd5879717b3b764c574d9ec806b2aa1&client_id=cbb90c8c9e00b757a07a',
-            self.parse_user_repos)
-
         for i, user in enumerate(json_response):
 
             # 遍历用户信息
